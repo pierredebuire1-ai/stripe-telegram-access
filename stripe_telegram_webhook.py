@@ -39,6 +39,7 @@ stripe.api_key             = os.environ["STRIPE_SECRET_KEY"]
 STRIPE_WEBHOOK_SECRET      = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 TELEGRAM_BOT_TOKEN         = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID           = os.environ["TELEGRAM_CHAT_ID"]
+TELEGRAM_INVITE_LINK       = os.environ["TELEGRAM_INVITE_LINK"]
 
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
@@ -235,19 +236,10 @@ def success():
             message="Ton paiement n'a pas encore été validé.",
         ), 402
 
-    # Génération du lien Telegram
-    try:
-        customer_name = (
-            (session.customer_details and session.customer_details.name) or ""
-        )
-        invite_link = create_invite_link(label=customer_name or session_id[-8:])
-    except Exception as exc:
-        log.error("Telegram invite link error: %s", exc)
-        return render_template_string(
-            ERROR_PAGE,
-            title="Erreur Telegram",
-            message="Impossible de générer ton lien. Contacte le support.",
-        ), 500
+    # Lien Telegram
+    customer_name = (session.customer_details and session.customer_details.name) or ""
+    invite_link = TELEGRAM_INVITE_LINK
+    log.info("Invite link utilisé : %s", invite_link)
 
     # Marquer la session comme utilisée
     _used_sessions.add(session_id)
