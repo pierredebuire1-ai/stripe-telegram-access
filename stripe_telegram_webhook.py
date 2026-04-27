@@ -28,7 +28,7 @@ import hashlib
 
 import requests
 import stripe
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, redirect
 from dotenv import load_dotenv
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -236,22 +236,13 @@ def success():
             message="Ton paiement n'a pas encore été validé.",
         ), 402
 
-    # Lien Telegram
-    customer_name = (session.customer_details and session.customer_details.name) or ""
-    invite_link = TELEGRAM_INVITE_LINK
-    log.info("Invite link utilisé : %s", invite_link)
-
     # Marquer la session comme utilisée
     _used_sessions.add(session_id)
     log.info("Accès accordé — session=%s email=%s", session_id,
              session.customer_details and session.customer_details.email)
 
-    return render_template_string(
-        SUCCESS_PAGE,
-        error=False,
-        name=customer_name or "toi",
-        invite_link=invite_link,
-    )
+    # Redirection directe vers Telegram
+    return redirect(TELEGRAM_INVITE_LINK)
 
 
 # ── Webhook Stripe (secours) ──────────────────────────────────────────────────
