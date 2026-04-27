@@ -163,6 +163,13 @@ def create_invite_link(label: str = "") -> str:
         raise RuntimeError(f"Telegram error: {data.get('description')}")
     return data["result"]["invite_link"]
 
+# ── Route accueil ────────────────────────────────────────────────────────────
+
+@app.route("/")
+def index():
+    return "Server is running", 200
+
+
 # ── Route principale — redirection post-paiement ──────────────────────────────
 
 @app.route("/success")
