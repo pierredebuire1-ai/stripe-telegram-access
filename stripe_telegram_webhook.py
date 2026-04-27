@@ -163,6 +163,25 @@ def create_invite_link(label: str = "") -> str:
         raise RuntimeError(f"Telegram error: {data.get('description')}")
     return data["result"]["invite_link"]
 
+def send_telegram_message(text: str) -> None:
+    """Envoie un message texte dans le canal Telegram."""
+    try:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            data={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "text": text,
+            },
+            timeout=10,
+        )
+        print(f"[Telegram] status_code={resp.status_code}")
+        print(f"[Telegram] response={resp.text}")
+        if not resp.json().get("ok"):
+            log.error("Telegram sendMessage error: %s", resp.text)
+    except Exception as exc:
+        log.error("Telegram sendMessage exception: %s", exc)
+
+
 # ── Route accueil ────────────────────────────────────────────────────────────
 
 @app.route("/")
@@ -264,10 +283,9 @@ def stripe_webhook():
     if event.type == "checkout.session.completed":
         obj = event.data.object
         if obj.payment_status == "paid":
-            log.info("Webhook backup — session %s payée (lien non généré ici, "
-                     "prévoir envoi email)", obj.id)
-            # TODO : si tu veux le backup email, ajoute ici l'envoi SMTP
-            # avec create_invite_link() + send_invite_email()
+            email = (obj.customer_details and obj.customer_details.email) or "inconnu"
+            log.info("Paiement confirmé — session=%s email=%s", obj.id, email)
+            send_telegram_message(f"Paiement reçu 💸\nEmail : {email}")
 
     return jsonify({"status": "ok"}), 200
 
